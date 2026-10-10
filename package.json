@@ -1,0 +1,12 @@
+{
+  "name": "walkie-talkie-signaling",
+  "version": "1.0.0",
+  "description": "Servidor de señalización WebRTC para la app walkie-talkie",
+  "main": "signaling-server.js",
+  "scripts": {
+    "start": "node signaling-server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.5"
+  }
+}
