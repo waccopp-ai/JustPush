@@ -32,7 +32,20 @@ const rooms = new Map();
 io.on("connection", (socket) => {
   let currentRoom = null;
 
+  function leaveCurrentRoom() {
+    if (currentRoom && rooms.has(currentRoom)) {
+      rooms.get(currentRoom).delete(socket.id);
+      socket.to(currentRoom).emit("peer-left", { id: socket.id });
+      if (rooms.get(currentRoom).size === 0) rooms.delete(currentRoom);
+      socket.leave(currentRoom);
+    }
+    currentRoom = null;
+  }
+
   socket.on("join", ({ room, name }) => {
+    // Si ya estaba en otro canal (cambio de canal), sal de ahí primero
+    leaveCurrentRoom();
+
     currentRoom = room;
     socket.join(room);
 
@@ -49,6 +62,10 @@ io.on("connection", (socket) => {
     socket.to(room).emit("peer-joined", { id: socket.id, name });
   });
 
+  socket.on("leave", () => {
+    leaveCurrentRoom();
+  });
+
   socket.on("signal", ({ to, name, data }) => {
     io.to(to).emit("signal", { from: socket.id, name, data });
   });
@@ -58,11 +75,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    if (currentRoom && rooms.has(currentRoom)) {
-      rooms.get(currentRoom).delete(socket.id);
-      socket.to(currentRoom).emit("peer-left", { id: socket.id });
-      if (rooms.get(currentRoom).size === 0) rooms.delete(currentRoom);
-    }
+    leaveCurrentRoom();
   });
 });
 
